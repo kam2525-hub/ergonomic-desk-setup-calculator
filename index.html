@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>デスクワーク姿勢改善！机と椅子の最適高さシミュレーター</title>
+  <style>
+    /* モダンCSSリセット & 変数定義 */
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --secondary: #0ea5e9;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --danger: #f43f5e;
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 16px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 20px 10px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ヘッダー */
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px 0;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 10px;
+      letter-spacing: -0.025em;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* メインレイアウト */
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    @media (min-width: 1024px) {
+      .grid-layout {
+        grid-template-columns: 1.1fr 1.9fr;
+      }
+    }
+
+    /* カードスタイル */
+    .card {
+      background-color: var(--bg-card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      border: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-main);
+      border-bottom: 2px solid var(--bg-main);
+      padding-bottom: 10px;
+    }
+
+    /* フォームパーツ */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    /* スライダーと数値入力の同期エリア */
+    .range-input-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--border);
+      outline: none;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .num-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="number"], select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      color: var(--text-main);
+      background-color: var(--bg-main);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="number"]:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    .unit {
+      position: absolute;
+      right: 12px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    /* トグルボタン（姿勢選択） */
+    .toggle-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      background-color: var(--bg-main);
+      padding: 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .toggle-buttons input[type="radio"] {
+      display: none;
+    }
+
+    .toggle-buttons label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      margin-bottom: 0;
+      text-align: center;
+    }
+
+    .toggle-buttons input[type="radio"]:checked + label {
+      background-color: var(--bg-card);
+      color: var(--primary);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* シミュレーター表示エリア */
+    .visualizer-container {
+      background-color: #0f172a; /* ダークテーマでCAD風に */
+      border-radius: var(--radius);
+      padding: 15px;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      min-height: 380px;
+    }
+
+    .visualizer-container svg {
+      width: 100%;
+      height: auto;
+      max-height: 400px;
+    }
+
+    /* 結果数値グリッド */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .result-card {
+      background-color: var(--bg-main);
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .result-card.chair::before { background-color: #a855f7; }
+    .result-card.desk::before { background-color: #10b981; }
+    .result-card.display::before { background-color: #f59e0b; }
+
+    .result-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .result-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .result-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* 比較診断セクション */
+    .diagnose-section {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .diagnose-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--border);
+      color: var(--text-main);
+      margin-top: 8px;
+    }
+
+    .btn-secondary:hover {
+      background-color: #cbd5e1;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    /* 診断レポート表示 */
+    .report-card {
+      margin-top: 15px;
+      padding: 16px;
+      border-radius: 12px;
+      background-color: #f0fdf4; /* 成功・安全を意味する薄い緑 */
+      border: 1px solid #bbf7d0;
+      display: none;
+    }
+
+    .report-card.warning {
+      background-color: #fffbeb; /* 警告を意味する薄い黄 */
+      border: 1px solid #fde68a;
+    }
+
+    .report-title {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .report-item {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      padding-left: 14px;
+      position: relative;
+    }
+
+    .report-item::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--text-muted);
+    }
+
+    /* タブシステム */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 1px;
+    }
+
+    .tab-btn {
+      padding: 12px 20px;
+      border: none;
+      background: none;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--primary);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--primary);
+      border-radius: 3px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ガイド・解説コンテンツ */
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .guide-item {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .guide-item h4 {
+      font-size: 1.1rem;
+      color: var(--primary);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .guide-item p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .theory-box {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .theory-box h3 {
+      font-size: 1.25rem;
+      margin-bottom: 15px;
+      color: var(--text-main);
+    }
+
+    .theory-box code {
+      background-color: var(--bg-main);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .theory-box ul {
+      margin-left: 20px;
+      margin-top: 10px;
+    }
+
+    .theory-box li {
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    /* SVGアニメーション用 */
+    .svg-transition {
+      transition: all 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>姿勢改善！机と椅子の高さシミュレーター</h1>
+    <p>あなたの身長から、エルゴノミクス（人間工学）に基づいた最適な「椅子の座面高」「机の天板高」「ディスプレイの推奨位置」をミリ単位で算出。理想的なデスク環境を視覚化します。</p>
+  </header>
+
+  <div class="grid-layout">
+    <!-- 左カラム：設定パネル -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        基本設定
+      </div>
+
+      <!-- 身長入力 -->
+      <div class="form-group">
+        <label for="input-height">あなたの身長</label>
+        <div class="range-input-container">
+          <input type="range" id="input-height" min="130" max="210" value="170">
+          <div class="num-input-wrapper" style="width: 100px;">
+            <input type="number" id="input-height-num" min="130" max="210" value="170" style="padding-right: 35px;">
+            <span class="unit">cm</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 姿勢モード -->
+      <div class="form-group">
+        <label>作業スタイル</label>
+        <div class="toggle-buttons">
+          <input type="radio" id="posture-sit" name="posture" value="sit" checked>
+          <label for="posture-sit">座り姿勢</label>
+          <input type="radio" id="posture-stand" name="posture" value="stand">
+          <label for="posture-stand">立ち姿勢 (昇降式)</label>
+        </div>
+      </div>
+
+      <!-- 靴・スリッパの厚み -->
+      <div class="form-group">
+        <label for="input-shoes">普段履いている履物の厚み</label>
+        <select id="input-shoes">
+          <option value="0">裸足・薄手の靴下 (0cm)</option>
+          <option value="1.5" selected>室内スリッパ (1.5cm)</option>
+          <option value="3">オフィスシューズ・厚底スリッパ (3.0cm)</option>
+        </select>
+      </div>
+
+      <!-- 作業タイプ -->
+      <div class="form-group">
+        <label for="input-worktype">主なデスクワーク内容</label>
+        <select id="input-worktype">
+          <option value="standard">標準（PC作業・書き物全般）</option>
+          <option value="keyboard" selected>キーボード入力メイン（机をやや低めに）</option>
+          <option value="writing">書き物・読書メイン（机をやや高めに）</option>
+        </select>
+      </div>
+
+      <!-- 比較診断エリア -->
+      <div class="diagnose-section">
+        <div class="card-title" style="font-size: 1.1rem; margin-bottom: 15px; border-bottom: none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>
+          現在の環境と比較診断
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">現在の机と椅子の実寸を入力すると、理想とのズレと改善アドバイスを診断します。</p>
+        <div class="diagnose-inputs">
+          <div class="num-input-wrapper">
+            <input type="number" id="current-chair" placeholder="椅子の高さ" style="padding-right: 35px;">
+            <span class="unit">cm</span>
+          </div>
+          <div class="num-input-wrapper">
+            <input type="number" id="current-desk" placeholder="机の高さ" style="padding-right: 35px;">
+            <span class="unit">cm</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="diagnosePosture()">現在の姿勢を診断する</button>
+        <button class="btn btn-secondary" onclick="clearDiagnosis()" id="btn-clear-diag" style="display: none;">診断をクリア</button>
+
+        <!-- 診断結果表示先 -->
+        <div class="report-card" id="diagnosis-report"></div>
+      </div>
+    </div>
+
+    <!-- 右カラム：シミュレーター ＆ 結果表示 -->
+    <div style="display: flex; flex-direction: column; gap: 30px;">
+      <!-- リアルタイムシミュレーター（SVG） -->
+      <div class="card" style="padding: 16px;">
+        <div class="card-title" style="margin-bottom: 12px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12h20M12 2v20M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0z"/></svg>
+          エルゴノミクス・プレビュー
+        </div>
+        <div class="visualizer-container">
+          <!-- 動的SVGシミュレーター -->
+          <svg id="simulator-svg" viewBox="0 0 500 380">
+            <!-- グリッド背景 -->
+            <defs>
+              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" rx="8"/>
+
+            <!-- 床面 -->
+            <line x1="10" y1="350" x2="490" y2="350" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+
+            <!-- 椅子オブジェクト -->
+            <g id="svg-chair" class="svg-transition">
+              <!-- 背もたれ -->
+              <path id="svg-chair-back" d="M 130 190 L 130 270" stroke="#64748b" stroke-width="6" stroke-linecap="round"/>
+              <!-- 座面 -->
+              <line id="svg-chair-seat" x1="125" y1="270" x2="190" y2="270" stroke="#64748b" stroke-width="8" stroke-linecap="round"/>
+              <!-- 脚 -->
+              <line id="svg-chair-leg" x1="160" y1="274" x2="160" y2="350" stroke="#475569" stroke-width="10" stroke-linecap="round"/>
+              <line id="svg-chair-foot" x1="140" y1="350" x2="180" y2="350" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+            </g>
+
+            <!-- 机オブジェクト -->
+            <g id="svg-desk" class="svg-transition">
+              <!-- 天板 -->
+              <line id="svg-desk-top" x1="210" y1="220" x2="350" y2="220" stroke="#94a3b8" stroke-width="10" stroke-linecap="round"/>
+              <!-- 脚 -->
+              <line id="svg-desk-leg" x1="320" y1="225" x2="320" y2="350" stroke="#475569" stroke-width="12" stroke-linecap="round"/>
+              <!-- キーボード -->
+              <rect id="svg-keyboard" x="220" y="210" width="35" height="6" rx="1" fill="#38bdf8"/>
+            </g>
+
+            <!-- ディスプレイ -->
+            <g id="svg-monitor" class="svg-transition">
+              <!-- アーム/スタンド -->
+              <path id="svg-monitor-stand" d="M 310 220 L 310 150 L 300 150" stroke="#64748b" stroke-width="5" fill="none" stroke-linejoin="round"/>
+              <!-- 画面 -->
+              <rect id="svg-monitor-screen" x="280" y="90" width="15" height="80" rx="3" fill="#334155"/>
+              <rect id="svg-monitor-inner" x="283" y="93" width="9" height="74" rx="1" fill="#0284c7"/>
+            </g>
+
+            <!-- 人体モデル -->
+            <g id="svg-human" class="svg-transition">
+              <!-- 頭部 -->
+              <circle id="svg-head" cx="165" cy="110" r="15" fill="#fed7aa" stroke="#f97316" stroke-width="2"/>
+              <!-- 背骨 (首から骨盤) -->
+              <path id="svg-spine" d="M 165 125 L 165 210" stroke="#f97316" stroke-width="6" stroke-linecap="round" fill="none"/>
+              <!-- 大腿部 (太もも) -->
+              <line id="svg-thigh" x1="165" y1="210" x2="225" y2="210" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
+              <!-- 下腿部 (すね) -->
+              <line id="svg-shin" x1="225" y1="210" x2="225" y2="350" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
+              <!-- 腕 -->
+              <path id="svg-arm" d="M 165 140 L 195 180 L 225 215" stroke="#f97316" stroke-width="5" stroke-linecap="round" fill="none" stroke-linejoin="round"/>
+              <!-- 視線 (目の位置から画面上部へ) -->
+              <line id="svg-sight" x1="180" y1="110" x2="280" y2="110" stroke="#eab308" stroke-width="1.5" stroke-dasharray="3 3"/>
+            </g>
+
+            <!-- 寸法表示ライン -->
+            <g id="svg-dimensions">
+              <!-- 椅子の高さ -->
+              <g id="dim-chair" class="svg-transition">
+                <line x1="95" y1="350" x2="95" y2="270" stroke="#c084fc" stroke-width="1.5" stroke-dasharray="2 2"/>
+                <path d="M 91 350 L 99 350 M 91 270 L 99 270" stroke="#c084fc" stroke-width="1.5"/>
+                <text id="dim-chair-text" x="83" y="310" fill="#c084fc" font-size="11" font-weight="bold" text-anchor="end">40.0cm</text>
+              </g>
+              <!-- 机の高さ -->
+              <g id="dim-desk" class="svg-transition">
+                <line x1="370" y1="350" x2="370" y2="220" stroke="#34d399" stroke-width="1.5" stroke-dasharray="2 2"/>
+                <path d="M 366 350 L 374 350 M 366 220 L 374 220" stroke="#34d399" stroke-width="1.5"/>
+                <text id="dim-desk-text" x="382" y="285" fill="#34d399" font-size="11" font-weight="bold" text-anchor="start">68.0cm</text>
+              </g>
+              <!-- ディスプレイの推奨高さ -->
+              <g id="dim-display" class="svg-transition">
+                <line x1="435" y1="350" x2="435" y2="90" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="2 2"/>
+                <path d="M 431 350 L 439 350 M 431 90 L 439 90" stroke="#fbbf24" stroke-width="1.5"/>
+                <text id="dim-display-text" x="447" y="220" fill="#fbbf24" font-size="11" font-weight="bold" text-anchor="start">110.0cm</text>
+              </g>
+            </g>
+          </svg>
+        </div>
+
+        <!-- 数値表示ボード -->
+        <div class="results-grid">
+          <div class="result-card chair" id="card-chair">
+            <div class="result-label">椅子の推奨座面高</div>
+            <div class="result-value" id="val-chair">0.0<span style="font-size: 1rem; font-weight: 500;"> cm</span></div>
+            <div class="result-sub">かかとが接地する高さ</div>
+          </div>
+          <div class="result-card desk">
+            <div class="result-label">机の推奨天板高</div>
+            <div class="result-value" id="val-desk">0.0<span style="font-size: 1rem; font-weight: 500;"> cm</span></div>
+            <div class="result-sub" id="label-desk-sub">肘を90度に保つ高さ</div>
+          </div>
+          <div class="result-card display">
+            <div class="result-label">ディスプレイ推奨高</div>
+            <div class="result-value" id="val-display">0.0<span style="font-size: 1rem; font-weight: 500;"> cm</span></div>
+            <div class="result-sub">床からの画面上端の高さ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 下部：タブエリア -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('guide')">姿勢改善ガイド</button>
+    <button class="tab-btn" onclick="switchTab('theory')">エルゴノミクス計算根拠</button>
+  </div>
+
+  <!-- タブコンテンツ1: ガイド -->
+  <div id="tab-guide" class="tab-content active">
+    <div class="guide-grid">
+      <div class="guide-item">
+        <h4>
+          <span style="background-color: rgba(168, 85, 247, 0.1); padding: 4px; border-radius: 6px;">🪑</span>
+          椅子のフィッティング
+        </h4>
+        <p>座面に深く腰掛け、背もたれに背中をしっかりと預けます。足の裏全体が床にぴったりとつき、太ももの裏側に無理な圧迫がない状態が理想です。もし足が浮く場合は、フットレスト（足置き台）を使用してください。</p>
+      </div>
+      <div class="guide-item">
+        <h4>
+          <span style="background-color: rgba(16, 185, 129, 0.1); padding: 4px; border-radius: 6px;">⌨️</span>
+          机とキーボードの位置
+        </h4>
+        <p>肩の力を抜き、肘の角度が90度から100度になるようにします。キーボードに手を置いたときに、手首が上や下に曲がらず真っ直ぐ保てる高さが理想です。机が高すぎると肩こりの原因になります。</p>
+      </div>
+      <div class="guide-item">
+        <h4>
+          <span style="background-color: rgba(245, 158, 11, 0.1); padding: 4px; border-radius: 6px;">🖥️</span>
+          画面の距離と角度
+        </h4>
+        <p>目線からディスプレイまでの距離は40cm〜70cm程度確保します。画面の上端が目の高さとほぼ同じか、やや低くなるように設置します。視線が少し下を向くことで、目の乾燥（ドライアイ）や首への負担を予防できます。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- タブコンテンツ2: 計算根拠 -->
+  <div id="tab-theory" class="tab-content">
+    <div class="theory-box">
+      <h3>人間工学に基づく算出数式</h3>
+      <p>当シミュレーターは、人間工学（エルゴノミクス）の標準的な指標および日本オフィス家具協会（JOIFA）の推奨基準をベースに計算を行っています。</p>
+      <ul>
+        <li><strong>椅子の座面高（座り姿勢）:</strong> <code>身長 × 0.25 ＋ 履物の厚み</code><br>かかとが床にしっかりとつき、膝が約90度になる基準値です。</li>
+        <li><strong>適正差尺（座面から天板までの高さ）:</strong> <code>身長 × 0.17</code><br>座面から机の天板上面までの距離です。作業タイプによって調整を加えています。
+          <ul>
+            <li>キーボード入力メイン: 手首への負担を減らすため差尺から <code>-2.0cm</code>。</li>
+            <li>書き物メイン: 前傾姿勢を抑えるため差尺から <code>+2.0cm</code>。</li>
+          </ul>
+        </li>
+        <li><strong>机の天板高（座り姿勢）:</strong> <code>椅子の座面高 ＋ 調整後の差尺</code></li>
+        <li><strong>机の天板高（立ち姿勢）:</strong> <code>身長 × 0.61 ＋ 履物の厚み</code>（作業タイプに応じた調整あり）<br>肘を直角に曲げた位置からやや下がキーボード操作の理想的な高さになります。</li>
+        <li><strong>ディスプレイ推奨高:</strong>
+          <ul>
+            <li>座り姿勢: <code>椅子の座面高 ＋ (身長 × 0.55 × 0.9)</code> (座高と目の位置を算出)</li>
+            <li>立ち姿勢: <code>身長 × 0.92 ＋ 履物の厚み</code> (立ち姿勢での目の高さ)</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  // DOM要素の取得
+  const heightSlider = document.getElementById('input-height');
+  const heightNum = document.getElementById('input-height-num');
+  const postureRadios = document.getElementsByName('posture');
+  const shoesSelect = document.getElementById('input-shoes');
+  const worktypeSelect = document.getElementById('input-worktype');
+
+  // SVG要素の取得
+  const svgChair = document.getElementById('svg-chair');
+  const svgChairSeat = document.getElementById('svg-chair-seat');
+  const svgChairLeg = document.getElementById('svg-chair-leg');
+  const svgChairBack = document.getElementById('svg-chair-back');
+  const svgDeskTop = document.getElementById('svg-desk-top');
+  const svgDeskLeg = document.getElementById('svg-desk-leg');
+  const svgKeyboard = document.getElementById('svg-keyboard');
+  const svgMonitorStand = document.getElementById('svg-monitor-stand');
+  const svgMonitorScreen = document.getElementById('svg-monitor-screen');
+  const svgMonitorInner = document.getElementById('svg-monitor-inner');
+  const svgHead = document.getElementById('svg-head');
+  const svgSpine = document.getElementById('svg-spine');
+  const svgThigh = document.getElementById('svg-thigh');
+  const svgShin = document.getElementById('svg-shin');
+  const svgArm = document.getElementById('svg-arm');
+  const svgSight = document.getElementById('svg-sight');
+
+  // SVG寸法線要素
+  const dimChair = document.getElementById('dim-chair');
+  const dimChairText = document.getElementById('dim-chair-text');
+  const dimDesk = document.getElementById('dim-desk');
+  const dimDeskText = document.getElementById('dim-desk-text');
+  const dimDisplay = document.getElementById('dim-display');
+  const dimDisplayText = document.getElementById('dim-display-text');
+
+  // 計算の実行と画面・SVGの更新
+  function update() {
+    const height = parseFloat(heightSlider.value);
+    const posture = Array.from(postureRadios).find(r => r.checked).value;
+    const shoes = parseFloat(shoesSelect.value);
+    const worktype = worktypeSelect.value;
+
+    // 1. 理論値の計算
+    let chairHeight = 0;
+    let diff = height * 0.17; // 標準差尺
+
+    // 作業タイプによる差尺調整
+    if (worktype === 'keyboard') {
+      diff -= 2.0;
+    } else if (worktype === 'writing') {
+      diff += 2.0;
+    }
+
+    let deskHeight = 0;
+    let displayHeight = 0;
+
+    if (posture === 'sit') {
+      chairHeight = (height * 0.25) + shoes;
+      deskHeight = chairHeight + diff;
+      // 目の高さ = 座面高 + 座高(身長の55%) × 目の位置比率(90%)
+      displayHeight = chairHeight + (height * 0.55 * 0.9);
+    } else {
+      // 立ち姿勢
+      chairHeight = 0; // 不要
+      deskHeight = (height * 0.61) + shoes;
+      if (worktype === 'keyboard') deskHeight -= 2.0;
+      if (worktype === 'writing') deskHeight += 2.0;
+      displayHeight = (height * 0.92) + shoes;
+    }
+
+    // ミリ単位（小数点第1位）に丸める
+    chairHeight = Math.round(chairHeight * 10) / 10;
+    deskHeight = Math.round(deskHeight * 10) / 10;
+    displayHeight = Math.round(displayHeight * 10) / 10;
+
+    // 2. 画面テキストの更新
+    if (posture === 'sit') {
+      document.getElementById('card-chair').style.opacity = '1';
+      document.getElementById('val-chair').innerHTML = `${chairHeight.toFixed(1)}<span style="font-size: 1rem; font-weight: 500;"> cm</span>`;
+      document.getElementById('label-desk-sub').innerText = '肘を90度に保つ高さ';
+    } else {
+      document.getElementById('card-chair').style.opacity = '0.4';
+      document.getElementById('val-chair').innerHTML = `不要<span style="font-size: 1rem; font-weight: 500;"> (立位)</span>`;
+      document.getElementById('label-desk-sub').innerText = '立ち姿勢時の推奨高さ';
+    }
+    document.getElementById('val-desk').innerHTML = `${deskHeight.toFixed(1)}<span style="font-size: 1rem; font-weight: 500;"> cm</span>`;
+    document.getElementById('val-display').innerHTML = `${displayHeight.toFixed(1)}<span style="font-size: 1rem; font-weight: 500;"> cm</span>`;
+
+    // 3. SVGグラフィックの動的更新
+    const floorY = 350;
+    const scale = 1.5; // cmからpxへの変換スケール
+
+    // 各種高さをピクセルに変換
+    const chairHPx = chairHeight * scale;
+    const deskHPx = deskHeight * scale;
+    const displayHPx = displayHeight * scale;
+    const shoesHPx = shoes * scale;
+
+    const chairY = floorY - chairHPx;
+    const deskY = floorY - deskHPx;
+    const eyeY = floorY - displayHPx;
+
+    if (posture === 'sit') {
+      // --- 座り姿勢の描画 ---
+      svgChair.style.opacity = '1';
+      dimChair.style.opacity = '1';
+
+      // 椅子
+      svgChairSeat.setAttribute('y1', chairY);
+      svgChairSeat.setAttribute('y2', chairY);
+      svgChairLeg.setAttribute('y1', chairY + 4);
+      svgChairBack.setAttribute('d', `M 130 ${chairY - 65} L 130 ${chairY}`);
+
+      // 机
+      svgDeskTop.setAttribute('y1', deskY);
+      svgDeskTop.setAttribute('y2', deskY);
+      svgDeskLeg.setAttribute('y1', deskY + 5);
+      svgKeyboard.setAttribute('y', deskY - 8);
+
+      // ディスプレイ
+      const monitorX = 290;
+      svgMonitorScreen.setAttribute('x', monitorX);
+      svgMonitorScreen.setAttribute('y', eyeY);
+      svgMonitorInner.setAttribute('x', monitorX + 3);
+      svgMonitorInner.setAttribute('y', eyeY + 3);
+      svgMonitorStand.setAttribute('d', `M ${monitorX + 25} ${deskY} L ${monitorX + 25} ${eyeY + 40} L ${monitorX + 15} ${eyeY + 40}`);
+
+      // 人体（座り姿勢）
+      const pelvisX = 160;
+      const pelvisY = chairY - 5;
+      const shoulderX = 160;
+      const shoulderY = pelvisY - (height * 0.55 * 0.7 * scale);
+      const headCX = 160;
+      const headCY = eyeY;
+
+      svgHead.setAttribute('cx', headCX);
+      svgHead.setAttribute('cy', headCY);
+      svgSpine.setAttribute('d', `M ${shoulderX} ${shoulderY} L ${pelvisX} ${pelvisY}`);
+
+      // 太もも
+      const kneeX = 220;
+      const kneeY = pelvisY;
+      svgThigh.setAttribute('x1', pelvisX);
+      svgThigh.setAttribute('y1', pelvisY);
+      svgThigh.setAttribute('x2', kneeX);
+      svgThigh.setAttribute('y2', kneeY);
+
+      // すね
+      const ankleX = kneeX;
+      const ankleY = floorY - shoesHPx;
+      svgShin.setAttribute('x1', kneeX);
+      svgShin.setAttribute('y1', kneeY);
+      svgShin.setAttribute('x2', ankleX);
+      svgShin.setAttribute('y2', ankleY);
+
+      // 腕（肩 -> 肘 -> 手）
+      const elbowX = 180;
+      const elbowY = deskY + 5;
+      const handX = 220;
+      const handY = deskY - 4;
+      svgArm.setAttribute('d', `M ${shoulderX} ${shoulderY} L ${elbowX} ${elbowY} L ${handX} ${handY}`);
+
+      // 視線
+      svgSight.setAttribute('x1', headCX + 15);
+      svgSight.setAttribute('y1', headCY);
+      svgSight.setAttribute('x2', monitorX);
+      svgSight.setAttribute('y2', eyeY);
+
+      // 寸法線
+      dimChair.setAttribute('y', '0');
+      dimChairText.textContent = `${chairHeight.toFixed(0)}cm`;
+      document.querySelector('#dim-chair line').setAttribute('y2', chairY);
+      document.querySelector('#dim-chair path').setAttribute('d', `M 91 350 L 99 350 M 91 ${chairY} L 99 ${chairY}`);
+      dimChairText.setAttribute('y', (floorY + chairY) / 2);
+
+    } else {
+      // --- 立ち姿勢の描画 ---
+      svgChair.style.opacity = '0';
+      dimChair.style.opacity = '0';
+
+      // 机
+      svgDeskTop.setAttribute('y1', deskY);
+      svgDeskTop.setAttribute('y2', deskY);
+      svgDeskLeg.setAttribute('y1', deskY + 5);
+      svgKeyboard.setAttribute('y', deskY - 8);
+
+      // ディスプレイ
+      const monitorX = 330;
+      svgMonitorScreen.setAttribute('x', monitorX);
+      svgMonitorScreen.setAttribute('y', eyeY);
+      svgMonitorInner.setAttribute('x', monitorX + 3);
+      svgMonitorInner.setAttribute('y', eyeY + 3);
+      svgMonitorStand.setAttribute('d', `M ${monitorX + 25} ${deskY} L ${monitorX + 25} ${eyeY + 40} L ${monitorX + 15} ${eyeY + 40}`);
+
+      // 人体（直立立ち姿勢）
+      const ankleX = 200;
+      const ankleY = floorY - shoesHPx;
+      const kneeX = 200;
+      const kneeY = floorY - (height * 0.25 * scale);
+      const pelvisX = 200;
+      const pelvisY = floorY - (height * 0.47 * scale);
+      const shoulderX = 200;
+      const shoulderY = floorY - (height * 0.80 * scale);
+      const headCX = 200;
+      const headCY = eyeY;
+
+      svgHead.setAttribute('cx', headCX);
+      svgHead.setAttribute('cy', headCY);
+      svgSpine.setAttribute('d', `M ${shoulderX} ${shoulderY} L ${pelvisX} ${pelvisY}`);
+
+      svgThigh.setAttribute('x1', pelvisX);
+      svgThigh.setAttribute('y1', pelvisY);
+      svgThigh.setAttribute('x2', kneeX);
+      svgThigh.setAttribute('y2', kneeY);
+
+      svgShin.setAttribute('x1', kneeX);
+      svgShin.setAttribute('y1', kneeY);
+      svgShin.setAttribute('x2', ankleX);
+      svgShin.setAttribute('y2', ankleY);
+
+      // 腕
+      const elbowX = 215;
+      const elbowY = deskY + 5;
+      const handX = 250;
+      const handY = deskY - 4;
+      svgArm.setAttribute('d', `M ${shoulderX} ${shoulderY} L ${elbowX} ${elbowY} L ${handX} ${handY}`);
+
+      // 視線
+      svgSight.setAttribute('x1', headCX + 15);
+      svgSight.setAttribute('y1', headCY);
+      svgSight.setAttribute('x2', monitorX);
+      svgSight.setAttribute('y2', eyeY);
+    }
+
+    // 共通の寸法線更新
+    dimDeskText.textContent = `${deskHeight.toFixed(0)}cm`;
+    document.querySelector('#dim-desk line').setAttribute('y2', deskY);
+    document.querySelector('#dim-desk path').setAttribute('d', `M 366 350 L 374 350 M 366 ${deskY} L 374 ${deskY}`);
+    dimDeskText.setAttribute('y', (floorY + deskY) / 2);
+
+    dimDisplayText.textContent = `${displayHeight.toFixed(0)}cm`;
+    document.querySelector('#dim-display line').setAttribute('y2', eyeY);
+    document.querySelector('#dim-display path').setAttribute('d', `M 431 350 L 439 350 M 431 ${eyeY} L 439 ${eyeY}`);
+    dimDisplayText.setAttribute('y', (floorY + eyeY) / 2);
+
+    // 設定を保存
+    saveSettings();
+  }
+
+  // 診断機能
+  function diagnosePosture() {
+    const currentChair = parseFloat(document.getElementById('current-chair').value);
+    const currentDesk = parseFloat(document.getElementById('current-desk').value);
+
+    if (isNaN(currentChair) || isNaN(currentDesk)) {
+      alert('現在の椅子の高さと机の高さを入力してください。');
+      return;
+    }
+
+    // 現在の理想値を取得
+    const height = parseFloat(heightSlider.value);
+    const shoes = parseFloat(shoesSelect.value);
+    const worktype = worktypeSelect.value;
+    const posture = Array.from(postureRadios).find(r => r.checked).value;
+
+    let idealChair = (height * 0.25) + shoes;
+    let diff = height * 0.17;
+    if (worktype === 'keyboard') diff -= 2.0;
+    if (worktype === 'writing') diff += 2.0;
+    let idealDesk = posture === 'sit' ? idealChair + diff : (height * 0.61) + shoes;
+
+    idealChair = Math.round(idealChair * 10) / 10;
+    idealDesk = Math.round(idealDesk * 10) / 10;
+
+    const chairDiff = Math.round((currentChair - idealChair) * 10) / 10;
+    const deskDiff = Math.round((currentDesk - idealDesk) * 10) / 10;
+
+    const reportCard = document.getElementById('diagnosis-report');
+    let reportHTML = `<div class="report-title">`;
+    let hasWarning = false;
+
+    // 判定ロジック
+    let chairMsg = '';
+    if (posture === 'sit') {
+      if (Math.abs(chairDiff) <= 1.5) {
+        chairMsg = `椅子の高さ (${currentChair}cm): <strong>理想的です！</strong> (差: ${chairDiff > 0 ? '+' : ''}${chairDiff}cm)`;
+      } else if (chairDiff > 1.5) {
+        chairMsg = `椅子の高さ (${currentChair}cm): <strong>高すぎます</strong> (理想より +${chairDiff}cm)。太もも裏が圧迫され血流が悪化する恐れがあります。フットレストを置くか座面を下げてください。`;
+        hasWarning = true;
+      } else {
+        chairMsg = `椅子の高さ (${currentChair}cm): <strong>低すぎます</strong> (理想より ${chairDiff}cm)。骨盤が後傾し、猫背を誘発しやすくなります。`;
+        hasWarning = true;
+      }
+    } else {
+      chairMsg = `立ち姿勢モードが選択されています。椅子の診断はスキップされました。`;
+    }
+
+    let deskMsg = '';
+    if (Math.abs(deskDiff) <= 2.0) {
+      deskMsg = `机の高さ (${currentDesk}cm): <strong>理想的です！</strong> (差: ${deskDiff > 0 ? '+' : ''}${deskDiff}cm)`;
+    } else if (deskDiff > 2.0) {
+      deskMsg = `机の高さ (${currentDesk}cm): <strong>高すぎます</strong> (理想より +${deskDiff}cm)。肩が上がり、慢性的で激しい肩こりや首痛の原因になります。`;
+      hasWarning = true;
+    } else {
+      deskMsg = `机の高さ (${currentDesk}cm): <strong>低すぎます</strong> (理想より ${deskDiff}cm)。背中が丸まり、ストレートネック（スマホ首）や腰痛の原因になります。`;
+      hasWarning = true;
+    }
+
+    // レポート表示
+    if (hasWarning) {
+      reportCard.className = 'report-card warning';
+      reportHTML += `⚠️ 姿勢改善アドバイス</div>`;
+    } else {
+      reportCard.className = 'report-card';
+      reportHTML += `✅ 素晴らしい環境です！</div>`;
+    }
+
+    reportHTML += `<div class="report-item">${chairMsg}</div>`;
+    reportHTML += `<div class="report-item">${deskMsg}</div>`;
+    reportCard.innerHTML = reportHTML;
+    reportCard.style.display = 'block';
+    document.getElementById('btn-clear-diag').style.display = 'block';
+
+    // 診断データも保存
+    localStorage.setItem('ergonomic_current_chair', currentChair);
+    localStorage.setItem('ergonomic_current_desk', currentDesk);
+  }
+
+  function clearDiagnosis() {
+    document.getElementById('current-chair').value = '';
+    document.getElementById('current-desk').value = '';
+    const reportCard = document.getElementById('diagnosis-report');
+    reportCard.style.display = 'none';
+    document.getElementById('btn-clear-diag').style.display = 'none';
+    localStorage.removeItem('ergonomic_current_chair');
+    localStorage.removeItem('ergonomic_current_desk');
+  }
+
+  // タブ切り替え
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+    document.getElementById(`tab-${tabId}`).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  // 設定のローカルストレージへの保存
+  function saveSettings() {
+    const settings = {
+      height: heightSlider.value,
+      posture: Array.from(postureRadios).find(r => r.checked).value,
+      shoes: shoesSelect.value,
+      worktype: worktypeSelect.value
+    };
+    localStorage.setItem('ergonomic_settings', JSON.stringify(settings));
+  }
+
+  // 設定の復元
+  function loadSettings() {
+    const saved = localStorage.getItem('ergonomic_settings');
+    if (saved) {
+      try {
+        const settings = JSON.parse(saved);
+        heightSlider.value = settings.height;
+        heightNum.value = settings.height;
+        
+        const radio = Array.from(postureRadios).find(r => r.value === settings.posture);
+        if (radio) radio.checked = true;
+
+        shoesSelect.value = settings.shoes;
+        worktypeSelect.value = settings.worktype;
+      } catch (e) {
+        console.error("Failed to load settings:", e);
+      }
+    }
+
+    const savedCurrentChair = localStorage.getItem('ergonomic_current_chair');
+    const savedCurrentDesk = localStorage.getItem('ergonomic_current_desk');
+    if (savedCurrentChair && savedCurrentDesk) {
+      document.getElementById('current-chair').value = savedCurrentChair;
+      document.getElementById('current-desk').value = savedCurrentDesk;
+      diagnosePosture();
+    }
+  }
+
+  // イベントリスナーの登録
+  heightSlider.addEventListener('input', (e) => {
+    heightNum.value = e.target.value;
+    update();
+  });
+
+  heightNum.addEventListener('input', (e) => {
+    let val = parseInt(e.target.value);
+    if (isNaN(val)) return;
+    if (val < 130) val = 130;
+    if (val > 210) val = 210;
+    heightSlider.value = val;
+    update();
+  });
+
+  postureRadios.forEach(r => r.addEventListener('change', update));
+  shoesSelect.addEventListener('change', update);
+  worktypeSelect.addEventListener('change', update);
+
+  // 初期化
+  window.addEventListener('DOMContentLoaded', () => {
+    loadSettings();
+    update();
+  });
+</script>
+
+</body>
+</html>
